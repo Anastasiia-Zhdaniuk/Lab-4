@@ -1,0 +1,258 @@
+#include <iostream>
+#include <stdexcept>
+
+class Vector3D {
+private:
+    double x, y, z;
+    int state;
+    static int objectCount;
+
+public:
+    // Константи для стану
+    static const int OK = 0;
+    static const int NULL_PTR_ERROR = 1;
+    static const int DIVIDE_BY_ZERO_ERROR = 2;
+    static const int INVALID_INDEX_ERROR = 3;
+
+    // Конструктор без параметрів
+    Vector3D() : x(0), y(0), z(0), state(OK) {
+        ++objectCount;
+    }
+
+    // Конструктор з одним параметром типу double
+    Vector3D(double val) : x(val), y(val), z(val), state(OK) {
+        ++objectCount;
+    }
+
+    // Конструктор з одним параметром вказівник на масив
+    Vector3D(const double* arr) {
+        if (arr == nullptr) {
+            state = NULL_PTR_ERROR;
+            x = y = z = 0;
+        }
+        else {
+            x = arr[0];
+            y = arr[1];
+            z = arr[2];
+            state = OK;
+        }
+        ++objectCount;
+    }
+
+    // Деструктор
+    ~Vector3D() {
+        --objectCount;
+    }
+
+    // Унарні префіксні та постфіксні ++ та --
+    Vector3D& operator++() {
+        ++x; ++y; ++z;
+        return *this;
+    }
+
+    Vector3D operator++(int) {
+        Vector3D temp = *this;
+        ++(*this);
+        return temp;
+    }
+
+    Vector3D& operator--() {
+        --x; --y; --z;
+        return *this;
+    }
+
+    Vector3D operator--(int) {
+        Vector3D temp = *this;
+        --(*this);
+        return temp;
+    }
+
+    // Унарна логічна !
+    bool operator!() const {
+        return x == 0 && y == 0 && z == 0;
+    }
+
+    
+
+    // Операція присвоєння
+    Vector3D& operator=(const Vector3D& other) {
+        if (this != &other) {
+            x = other.x;
+            y = other.y;
+            z = other.z;
+            state = other.state;
+        }
+        return *this;
+    }
+
+    // Операції присвоєння з +=, -=, *=, /=, &=, %=
+    Vector3D& operator+=(const Vector3D& other) {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+        return *this;
+    }
+
+    Vector3D& operator-=(const Vector3D& other) {
+        x -= other.x;
+        y -= other.y;
+        z -= other.z;
+        return *this;
+    }
+
+    Vector3D& operator*=(double scalar) {
+        x *= scalar;
+        y *= scalar;
+        z *= scalar;
+        return *this;
+    }
+
+    Vector3D& operator/=(double scalar) {
+        if (scalar == 0) {
+            state = DIVIDE_BY_ZERO_ERROR;
+            throw std::runtime_error("Division by zero");
+        }
+        x /= scalar;
+        y /= scalar;
+        z /= scalar;
+        return *this;
+    }
+
+    Vector3D& operator%=(int scalar) {
+        x = static_cast<int>(x) % scalar;
+        y = static_cast<int>(y) % scalar;
+        z = static_cast<int>(z) % scalar;
+        return *this;
+    }
+
+    // Бінарні арифметичні операції +, -, *, /, %
+    friend Vector3D operator+(Vector3D lhs, const Vector3D& rhs) {
+        lhs += rhs;
+        return lhs;
+    }
+
+    friend Vector3D operator-(Vector3D lhs, const Vector3D& rhs) {
+        lhs -= rhs;
+        return lhs;
+    }
+
+    friend Vector3D operator*(Vector3D vec, double scalar) {
+        vec *= scalar;
+        return vec;
+    }
+
+    friend Vector3D operator/(Vector3D vec, double scalar) {
+        vec /= scalar;
+        return vec;
+    }
+
+    friend Vector3D operator%(Vector3D vec, int scalar) {
+        vec %= scalar;
+        return vec;
+    }
+
+    // Побітові операції зсувів >>, <<
+    friend std::ostream& operator<<(std::ostream& os, const Vector3D& vec) {
+        os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+        return os;
+    }
+
+    friend std::istream& operator>>(std::istream& is, Vector3D& vec) {
+        is >> vec.x >> vec.y >> vec.z;
+        return is;
+    }
+
+    // Операції рівності та нерівності
+    bool operator==(const Vector3D& other) const {
+        return x == other.x && y == other.y && z == other.z;
+    }
+
+    bool operator!=(const Vector3D& other) const {
+        return !(*this == other);
+    }
+
+    // Операція індексації
+    double& operator[](int index) {
+        switch (index) {
+        case 0: return x;
+        case 1: return y;
+        case 2: return z;
+        default:
+            state = INVALID_INDEX_ERROR;
+            return z; 
+        }
+    }
+
+    // Операції розподілу пам'яті
+    void* operator new(size_t size) {
+        return ::operator new(size);
+    }
+
+    void operator delete(void* ptr) {
+        ::operator delete(ptr);
+    }
+
+    // Операція виклику функції
+    void operator()() const {
+        std::cout << "Вектор: (" << x << ", " << y << ", " << z << ") Стан: " << state << std::endl;
+    }
+
+    // Операції порівняння
+    bool operator>(const Vector3D& other) const {
+        return x > other.x && y > other.y && z > other.z;
+    }
+
+    bool operator>=(const Vector3D& other) const {
+        return x >= other.x && y >= other.y && z >= other.z;
+    }
+
+    bool operator<(const Vector3D& other) const {
+        return x < other.x && y < other.y && z < other.z;
+    }
+
+    bool operator<=(const Vector3D& other) const {
+        return x <= other.x && y <= other.y && z <= other.z;
+    }
+
+    // Функція для отримання кількості об'єктів
+    static int getObjectCount() {
+        return objectCount;
+    }
+
+    // Функція для отримання стану
+    int getState() const {
+        return state;
+    }
+};
+
+int Vector3D::objectCount = 0;
+
+int main() {
+    Vector3D v1;
+    Vector3D v2(3.0);
+    double arr[3] = { 1.0, 2.0, 3.0 };
+    Vector3D v3(arr);
+    std::cout << "Вектор v1: " << v1 << std::endl;
+    std::cout << "Вектор v2: " << v2 << std::endl;
+    std::cout << "Вектор v3: " << v3 << std::endl;
+    v1 = v2 + v3;
+    std::cout << "Вектор v1 після додавання v2 та v3: " << v1 << std::endl;
+    v1 += v3;
+    std::cout << "Вектор v1 після += v3: " << v1 << std::endl;
+    v1 -= v2;
+    std::cout << "Вектор v1 після -= v2: " << v1 << std::endl;
+    v1 *= 2;
+    std::cout << "Вектор v1 після *= 2: " << v1 << std::endl;
+    v1 %= 2;
+    std::cout << "Вектор v1 після %= 2: " << v1 << std::endl;
+    ++v1;
+    std::cout << "Вектор v1 після префіксного ++: " << v1 << std::endl;
+    v1++;
+    std::cout << "Вектор v1 після постфіксного ++: " << v1 << std::endl;
+    --v1;
+    std::cout << "Вектор v1 після префіксного --: " << v1 << std::endl;
+    v1--;
+    std::cout << "Вектор v1 після постфіксного --: " << v1 << std::endl;
+    std::cout << "Кількість об'єктів Vector3D: " << Vector3D::getObjectCount() << std::endl;
+    return 0;
+}

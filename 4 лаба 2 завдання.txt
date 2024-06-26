@@ -1,0 +1,114 @@
+#include <iostream>
+#include <string>
+
+// Клас асоціативного масиву
+class AssociativeArray {
+private:
+    // Структура для зберігання пари ключ-значення
+    struct Pair {
+        std::string key;
+        int value;
+    };
+
+    Pair* data; // Динамічний масив пар
+    int size; // Поточний розмір масиву
+    int capacity; // Ємність масиву
+    int CodeError; // Код помилки
+
+public:
+    static const int OK = 0;
+    static const int KEY_NOT_FOUND_ERROR = 1;
+
+    // Конструктор без параметрів
+    AssociativeArray() : size(0), capacity(10), CodeError(OK) {
+        data = new Pair[capacity]; // Виділення пам'яті під масив
+    }
+
+    // Деструктор
+    ~AssociativeArray() {
+        delete[] data; // Звільнення пам'яті
+    }
+
+    // Метод для додавання нового елементу
+    void add(const std::string& key, int value) {
+        // Перевірка чи є місце в масиві, якщо ні - збільшити ємність
+        if (size == capacity) {
+            capacity *= 2; // Збільшення ємності вдвічі
+            Pair* newData = new Pair[capacity]; // Виділення нової пам'яті
+            for (int i = 0; i < size; ++i) {
+                newData[i] = data[i]; // Копіювання старих даних
+            }
+            delete[] data; // Звільнення старої пам'яті
+            data = newData; // Оновлення вказівника
+        }
+        data[size].key = key; // Встановлення ключа
+        data[size].value = value; // Встановлення значення
+        ++size; // Збільшення розміру
+        CodeError = OK; // Оновлення коду помилки
+    }
+
+    // Оператор індексації
+    int& operator[](const std::string& key) {
+        // Пошук ключа в масиві
+        for (int i = 0; i < size; ++i) {
+            if (data[i].key == key) {
+                CodeError = OK; // Якщо ключ знайдено, оновити код помилки
+                return data[i].value; // Повернути відповідне значення
+            }
+        }
+        CodeError = KEY_NOT_FOUND_ERROR; // Якщо ключ не знайдено, встановити код помилки
+        static int empty = -1; // Статичне значення для повернення у випадку помилки
+        return empty; // Повернути значення за замовчуванням
+    }
+
+    // Оператор виклику функції
+    int operator()(const std::string& key) const {
+        // Пошук ключа в масиві
+        for (int i = 0; i < size; ++i) {
+            if (data[i].key == key) {
+                return data[i].value; // Повернути відповідне значення, якщо ключ знайдено
+            }
+        }
+        return -1; // Повернути -1, якщо ключ не знайдено
+    }
+
+    // Метод для отримання коду помилки
+    int getCodeError() const {
+        return CodeError;
+    }
+
+    // Дружня функція для перевантаження оператора виведення
+    friend std::ostream& operator<<(std::ostream& os, const AssociativeArray& arr) {
+        // Виведення всіх елементів масиву
+        for (int i = 0; i < arr.size; ++i) {
+            os << arr.data[i].key << ": " << arr.data[i].value << std::endl;
+        }
+        return os;
+    }
+
+    // Дружня функція для перевантаження оператора введення
+    friend std::istream& operator>>(std::istream& is, AssociativeArray& arr) {
+        std::string key;
+        int value;
+        is >> std::ws; // Очистка пробілів перед читанням рядка
+        std::getline(is, key); // Читання ключа
+        is >> value; // Читання значення
+        arr.add(key, value); // Додавання пари ключ-значення в масив
+        return is;
+    }
+};
+
+int main() {
+    AssociativeArray arr;
+    arr.add("Ivanov Ivan Ivanovich", 1); // Додавання елементу в масив
+    arr.add("Petrov Petr Petrovich", 2); // Додавання ще одного елементу
+
+    std::cout << "Output all elements:\n" << arr; // Виведення всіх елементів масиву
+
+    std::cout << "Value for key 'Ivanov Ivan Ivanovich': " << arr["Ivanov Ivan Ivanovich"] << std::endl; // Виведення значення за ключем
+    std::cout << "Value for key 'Sidorov Sidr Sidorovich': " << arr["Sidorov Sidr Sidorovich"] << std::endl; // Спроба виведення значення за неіснуючим ключем
+
+    std::cout << "Error code after accessing key 'Sidorov Sidr Sidorovich': " << arr.getCodeError() << std::endl; // Виведення коду помилки після спроби доступу до неіснуючого ключа
+
+    return 0;
+}
